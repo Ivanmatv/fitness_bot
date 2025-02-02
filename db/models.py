@@ -1,56 +1,58 @@
-from sqlalchemy import Column, Integer, String, Enum, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Enum, Boolean, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from db.database import Base
 
-# Модель пользователя
+
 class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
-    gender = Column(Enum('M', 'F', name='gender_enum'), nullable=False)  # Пол
-    sport = Column(Enum('fitness', 'powerlifting', 'weightlifting', 'crossfit', name='sport_enum'), nullable=False)  # Вид спорта
-    intensity = Column(Enum('light', 'medium', 'heavy', name='intensity_enum'), nullable=False)  # Уровень нагрузки
-    subscription_status = Column(Boolean, default=False)  # Статус подписки (платная или нет)
+    gender = Column(Enum('M', 'F', name='gender_enum'), nullable=False)
+    sport = Column(Enum('fitness', 'powerlifting', 'weightlifting', 'crossfit', name='sport_enum'), nullable=False)
+    intensity = Column(Enum('light', 'medium', 'heavy', name='intensity_enum'), nullable=False)
+    subscription_status = Column(Boolean, default=False)
 
-    workouts = relationship("Workout", back_populates="user")  # Связь с тренировками
+    workouts = relationship("Workout", back_populates="user")
 
-# Модель тренировки
+
 class Workout(Base):
     __tablename__ = "workouts"
-
+    
     id = Column(Integer, primary_key=True)
-    exercises = Column(String, nullable=False)  # Упражнения в тренировке (например, через строку)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)  # Ссылка на пользователя
+    exercises = Column(Text, nullable=False)  # Можно хранить список упражнений в JSON
+    rest_recommendation = Column(String, nullable=True)  # Рекомендации по отдыху
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    
+    user = relationship("User", back_populates="workouts")
 
-    user = relationship("User", back_populates="workouts")  # Связь с пользователем
 
-# Типы упражнений (например, силовые, кардио)
 class ExerciseType(Base):
     __tablename__ = "exercise_types"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)  # Название типа (например, "силовые", "кардио")
+    name = Column(String, nullable=False)
 
-    exercises = relationship("Exercise", back_populates="exercise_type")  # Связь с упражнениями
+    exercises = relationship("Exercise", back_populates="exercise_type")
 
-# Виды спорта (например, фитнес, пауэрлифтинг)
+
 class Sport(Base):
     __tablename__ = "sports"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)  # Название вида спорта (например, "фитнес", "пауэрлифтинг")
+    name = Column(String, nullable=False)
 
-    exercises = relationship("Exercise", back_populates="sport")  # Связь с упражнениями
+    exercises = relationship("Exercise", back_populates="sport")
 
-# Упражнения, привязанные к конкретному виду спорта и типу
+
 class Exercise(Base):
     __tablename__ = "exercises"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)  # Название упражнения (например, "жим лёжа", "подтягивания")
-    description = Column(String, nullable=True)  # Описание упражнения (по желанию)
-    sport_id = Column(Integer, ForeignKey('sports.id'), nullable=False)  # Ссылка на вид спорта
-    exercise_type_id = Column(Integer, ForeignKey('exercise_types.id'), nullable=False)  # Ссылка на тип упражнения
+    name = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)  # Ссылка на изображение упражнения
+    sport_id = Column(Integer, ForeignKey('sports.id'), nullable=False)
+    exercise_type_id = Column(Integer, ForeignKey('exercise_types.id'), nullable=False)
 
-    sport = relationship("Sport", back_populates="exercises")  # Связь с видом спорта
-    exercise_type = relationship("ExerciseType", back_populates="exercises")  # Связь с типом упражнения
+    sport = relationship("Sport", back_populates="exercises")
+    exercise_type = relationship("ExerciseType", back_populates="exercises")
