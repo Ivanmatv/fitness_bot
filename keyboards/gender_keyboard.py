@@ -1,5 +1,6 @@
-# В файле gender_keyboard.py
+# gender_keyboard.py
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+
 
 def get_gender_keyboard():
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
