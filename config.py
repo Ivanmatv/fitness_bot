@@ -21,16 +21,16 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://my_user:Matveev@localhost
 # Проверка API-токенов
 def check_required_tokens():
     missing_tokens = []
-    
+
     if not API_TOKEN:
         missing_tokens.append("API_TOKEN")
-    if not COINBASE_COMMERCE_API_KEY:
-        missing_tokens.append("COINBASE_COMMERCE_API_KEY")
-    if not BITPAY_API_KEY:
-        missing_tokens.append("BITPAY_API_KEY")
-    if not CRYPTOCOM_API_KEY:
-        missing_tokens.append("CRYPTOCOM_API_KEY")
-    
+    # if not COINBASE_COMMERCE_API_KEY:
+    #     missing_tokens.append("COINBASE_COMMERCE_API_KEY")
+    # if not BITPAY_API_KEY:
+    #     missing_tokens.append("BITPAY_API_KEY")
+    # if not CRYPTOCOM_API_KEY:
+    #     missing_tokens.append("CRYPTOCOM_API_KEY")
+
     if missing_tokens:
         logger.critical(f"Отсутствуют необходимые токены: {', '.join(missing_tokens)}")
         raise ValueError(f"Не заданы переменные окружения: {', '.join(missing_tokens)}")
