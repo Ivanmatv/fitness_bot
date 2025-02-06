@@ -6,6 +6,10 @@ from aiogram.types import ParseMode, ReplyKeyboardMarkup, KeyboardButton
 from config import API_TOKEN
 from handlers import start_handler, gender_handler, sport_handler, intensity_handler, workout_handler
 # from payments import crypto_payment
+from keyboards.gender_keyboard import get_gender_keyboard
+from keyboards.sport_keyboard import get_sport_keyboard
+from keyboards.intensity_keyboard import get_intensity_keyboard
+from keyboards.main_keyboard import get_main_keyboard
 from logger import get_logger
 
 # Создаем логгер
@@ -54,29 +58,43 @@ async def profile_handler(message: types.Message):
 # Обработчик кнопки "Изменить пол"
 @dp.message_handler(lambda message: message.text == "Изменить пол")
 async def change_gender(message: types.Message):
-    logger.info("User pressed 'Изменить пол'")
+    logger.info(f"User {message.from_user.id} pressed 'Изменить пол'")
+    # Используем функцию для создания клавиатуры выбора пола
+    gender_keyboard = get_gender_keyboard()
     await message.answer("Пожалуйста, выберите свой пол:", reply_markup=gender_keyboard)
 
 
 # Обработчик кнопки "Изменить вид спорта"
 @dp.message_handler(lambda message: message.text == "Изменить вид спорта")
 async def change_sport(message: types.Message):
-    logger.info("User pressed 'Изменить вид спорта'")
+    logger.info(f"User {message.from_user.id} pressed 'Изменить вид спорта'")
+    # Используем функцию для создания клавиатуры выбора вида спорта
+    sport_keyboard = get_sport_keyboard()
     await message.answer("Пожалуйста, выберите вид спорта:", reply_markup=sport_keyboard)
 
 
 # Обработчик кнопки "Изменить уровень нагрузки"
 @dp.message_handler(lambda message: message.text == "Изменить уровень нагрузки")
 async def change_intensity(message: types.Message):
-    logger.info("User pressed 'Изменить уровень нагрузки'")
+    logger.info(f"User {message.from_user.id} pressed 'Изменить уровень нагрузки'")
+    # Используем функцию для создания клавиатуры выбора уровня нагрузки
+    intensity_keyboard = get_intensity_keyboard()
     await message.answer("Пожалуйста, выберите уровень нагрузки:", reply_markup=intensity_keyboard)
+
+
+@dp.message_handler(lambda message: message.text == "Назад")
+async def back_handler(message: types.Message):
+    logger.info(f"User {message.from_user.id} pressed 'Назад'")
+    main_keyboard = get_main_keyboard()  # Получаем главную клавиатуру
+    await message.answer("Возвращаемся в главное меню.", reply_markup=main_keyboard)
 
 
 # Обработка ошибок
 @dp.errors_handler()
-async def error_handler(update, exception):
-    logger.error(f"Exception occurred: {exception}")
+async def error_handler(update: types.Update, exception: Exception):
+    logger.error(f"Update: {update}\nException: {exception}")
     return True
+
 
 # Запуск бота
 if __name__ == "__main__":

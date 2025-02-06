@@ -8,5 +8,5 @@ def get_main_keyboard():
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add(KeyboardButton("Настроить профиль"))
     keyboard.add(KeyboardButton("Получить тренировку"))
-    keyboard.add(KeyboardButton("Вернуться"))
+    keyboard.add(KeyboardButton("Назад"))
     return keyboard
