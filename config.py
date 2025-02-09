@@ -15,8 +15,6 @@ COINBASE_COMMERCE_API_KEY = os.getenv("COINBASE_COMMERCE_API_KEY")
 BITPAY_API_KEY = os.getenv("BITPAY_API_KEY")
 CRYPTOCOM_API_KEY = os.getenv("CRYPTOCOM_API_KEY")
 
-# Данные для подключения к базе данных PostgreSQL
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://my_user:Matveev@localhost:5432/Fitness_bot")
 
 # Проверка API-токенов
 def check_required_tokens():

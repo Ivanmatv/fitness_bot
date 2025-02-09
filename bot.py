@@ -1,7 +1,8 @@
 # bot.py
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
-from aiogram.types import ParseMode, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from sqlalchemy.orm import Session
 
 from config import API_TOKEN
 from handlers import start_handler, gender_handler, sport_handler, intensity_handler, workout_handler
@@ -11,6 +12,11 @@ from keyboards.sport_keyboard import get_sport_keyboard
 from keyboards.intensity_keyboard import get_intensity_keyboard
 from keyboards.main_keyboard import get_main_keyboard
 from logger import get_logger
+from db.database import get_db, create_tables
+from db.models import User
+
+# Вызов функции для создания таблиц
+create_tables()
 
 # Создаем логгер
 logger = get_logger()
@@ -36,6 +42,28 @@ handlers_list = [
 
 for handler, command in handlers_list:
     dp.register_message_handler(handler, commands=command)
+
+
+@dp.message_handler(commands=["start"])
+async def start(message: types.Message):
+    # Получаем сессию базы данных
+    db: Session = next(get_db())  # Получаем сессию из генератора get_db
+
+    user = db.query(User).filter(User.id == message.from_user.id).first()
+
+    if not user:
+        # Если пользователя нет в базе, добавляем нового
+        new_user = User(
+            gender="M",  # Установите значение по умолчанию или запросите у пользователя
+            sport="fitness",  # Установите значение по умолчанию или запросите у пользователя
+            intensity="medium"  # Установите значение по умолчанию или запросите у пользователя
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        logger.info(f"New user {new_user.id} added to the database.")
+
+    await message.answer("Привет! Ты был добавлен в базу данных.")
 
 
 # Обработчик кнопки "Настроить профиль"
