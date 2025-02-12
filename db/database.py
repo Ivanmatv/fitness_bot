@@ -9,7 +9,7 @@ from logger import get_logger
 logger = get_logger()
 
 # Путь к базе данных для PostgreSQL
-DATABASE_URL = "postgresql://ivan:root@localhost:5432/Fitness_bot"
+DATABASE_URL = "postgresql://postgres:root@localhost:5432/Fitness_bot"
 
 # Создание движка базы данных
 engine = create_engine(DATABASE_URL)
