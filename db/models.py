@@ -47,6 +47,7 @@ class Exercise(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
+    type = Column(String, nullable=False)
     description = Column(String, nullable=True)
     image_url = Column(String, nullable=True)  # Ссылка на изображение упражнения
     sport_id = Column(Integer, ForeignKey('sports.id'), nullable=False)
