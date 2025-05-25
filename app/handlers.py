@@ -115,7 +115,7 @@ async def process_load_level(message: types.Message, state: FSMContext):
     # Формируем сообщение с упражнениями
     text = "Твоя тренировка:\n\n"
     for i, ex in enumerate(workout, 1):
-        text += f"{i}. {ex['name']} — {ex['description']}\n"
+        text += f"{i}. {ex['name']} — {ex['description']}\nПовторений: {ex.get('repetitions', 'N/A')}\n\n"
 
     await message.answer(text)
     logger.info(f"Пользователь {message.from_user.id} получил тренировку: спорт={sport_name}, нагрузка={message.text}")

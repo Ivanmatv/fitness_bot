@@ -6,19 +6,27 @@ from database import (
 
 
 def generate_workout(user_id, sport_id, load_level):
-    all_exercises = get_exercises_for_sport_and_load(sport_id, load_level)
-    last_exercise_ids = get_last_workout_exercises(user_id)
+    rows = get_exercises_for_sport_and_load(sport_id, load_level)
+    last_ids = set(get_last_workout_exercises(user_id))
 
-    # Фильтруем упражнения, которые были на последней тренировке
-    filtered_exercises = [
-        ex for ex in all_exercises if ex['id'] not in last_exercise_ids
-    ]
+    # Фильтруем по ID, убираем последний комплекс
+    pool = [r for r in rows if r['id'] not in last_ids]
+    if len(pool) < 3:
+        pool = rows
 
-    # Если после фильтрации мало упражнений, берём все (чтобы не было пусто)
-    if len(filtered_exercises) < 3:
-        filtered_exercises = all_exercises
+    # Берём 5 случайных
+    picked = random.sample(pool, min(5, len(pool)))
+    workout = []
+    for row in picked:
+        ex = dict(row)
 
-    # Выбираем случайно 5 упражнений для тренировки
-    workout = random.sample(filtered_exercises, min(5, len(filtered_exercises)))
+        if load_level == 'лёгки':
+            ex['repetitions'] = ex['reps_light']
+        elif load_level == 'средний':
+            ex['repetitions'] = ex['reps_medium']
+        else:
+            ex['repetitions'] = ex['reps_heavy']
+
+        workout.append(ex)
 
     return workout

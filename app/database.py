@@ -33,6 +33,9 @@ def init_db():
         sport_id INTEGER,
         load_level TEXT,
         description TEXT,
+        reps_light TEXT,
+        reps_medium TEXT,
+        reps_heavy TEXT,
         FOREIGN KEY (sport_id) REFERENCES sports(id)
     )""")
 
