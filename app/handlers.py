@@ -20,7 +20,10 @@ class Form(StatesGroup):
     load_level = State()
 
 
-# Клавиатуры
+# Общая строка меню
+MENU_ROW = [KeyboardButton(text="/start"), KeyboardButton(text="/newworkout")]
+
+# Клавиатура для выбора пола
 gender_kb = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="М"), KeyboardButton(text="Ж")]
@@ -28,6 +31,7 @@ gender_kb = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
+# Клавиатура для выбора вида спорта
 sport_kb = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="фитнес"), KeyboardButton(text="пауэрлифтинг")],
@@ -36,6 +40,7 @@ sport_kb = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
+# Клавиатура для выбора нагрузки
 load_kb = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="лёгкий"), KeyboardButton(text="средний"), KeyboardButton(text="тяжёлый")]
@@ -44,20 +49,32 @@ load_kb = ReplyKeyboardMarkup(
 )
 
 
+def with_menu(base_kb: ReplyKeyboardMarkup) -> ReplyKeyboardMarkup:
+    """Возвращает копию базовой клавиатуры с добавленной внизу строкой MENU_ROW"""
+    # Клонируем объект
+    kb = ReplyKeyboardMarkup(keyboard=[], resize_keyboard=True)
+    # Копируем существующие ряды кнопок
+    for row in base_kb.keyboard:
+        kb.keyboard.append(list(row))
+    # Добавляем строку меню
+    kb.keyboard.append(list(MENU_ROW))
+    return kb
+
+
 async def cmd_start(message: types.Message, state: FSMContext):
     logger.info(f"Пользователь {message.from_user.id} начал работу с ботом")
     user = get_user(message.from_user.id)
     if user:
         await message.answer("С возвращением! Хотите новую тренировку? Введите /newworkout")
     else:
-        await message.answer("Привет! Давай начнём с твоего пола (М/Ж):", reply_markup=gender_kb)
+        await message.answer("Привет! Давай начнём с твоего пола (М/Ж):", reply_markup=with_menu(gender_kb))
         await state.set_state(Form.gender)
         logger.info(f"Установлено состояние Form.gender для пользователя {message.from_user.id}")
 
 
 async def cmd_newworkout(message: types.Message, state: FSMContext):
     logger.info(f"/newworkout от пользователя {message.from_user.id}")
-    await message.answer("Выбери пол (М/Ж):", reply_markup=gender_kb)
+    await message.answer("Выбери пол (М/Ж):", reply_markup=with_menu(gender_kb))
     await state.set_state(Form.gender)
     logger.info(f"Установлено состояние Form.gender для пользователя {message.from_user.id} при /newworkout")
 
@@ -69,7 +86,7 @@ async def process_gender(message: types.Message, state: FSMContext):
         await message.answer("Пожалуйста, выберите пол кнопками ниже.")
         return
     add_user(message.from_user.id, message.text)
-    await message.answer("Выбери вид спорта:", reply_markup=sport_kb)
+    await message.answer("Выбери вид спорта:", reply_markup=with_menu(sport_kb))
     await state.set_state(Form.sport)
 
 
@@ -81,7 +98,7 @@ async def process_sport(message: types.Message, state: FSMContext):
         await message.answer("Пожалуйста, выбери вид спорта кнопками.")
         return
     await state.update_data(sport=message.text)
-    await message.answer("Выбери уровень нагрузки на тренировке:", reply_markup=load_kb)
+    await message.answer("Выбери уровень нагрузки на тренировке:", reply_markup=with_menu(load_kb))
     await state.set_state(Form.load_level)
     logger.info(f"Пользователь {message.from_user.id} выбрал спорт {message.text}, состояние Form.load_level")
 
