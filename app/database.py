@@ -140,3 +140,54 @@ def get_last_workout_exercises(user_id):
     exercises = cursor.fetchall()
     conn.close()
     return [e['id'] for e in exercises] if exercises else []
+
+
+def get_workout_history(user_id):
+    """Возвращает список всех тренировок пользователя"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    # Получаем все тренировки пользователя
+    cursor.execute("""
+        SELECT w.id, w.date, s.name AS sport, w.load_level
+        FROM workouts w
+        JOIN sports s ON w.sport_id = s.id
+        WHERE w.user_id = ?
+        ORDER BY w.date DESC
+    """, (user_id,))
+    workouts = cursor.fetchall()
+
+    history = []
+    for w in workouts:
+        # Для каждой тренировки берём упражнения
+        cursor.execute("""
+            SELECT e.name, e.description,
+                   e.reps_light, e.reps_medium, e.reps_heavy
+            FROM workout_exercises we
+            JOIN exercises e ON we.exercise_id = e.id
+            WHERE we.workout_id = ?
+        """, (w['id'],))
+        exercises = cursor.fetchall()
+
+        ex_list = []
+        for ex in exercises:
+            if w['load_level'] == 'лёгкий':
+                reps = ex['reps_light']
+            elif w['load_level'] == 'средний':
+                reps = ex['reps_medium']
+            else:
+                reps = ex['reps_heavy']
+            ex_list.append({
+              'name': ex['name'],
+              'description': ex['description'],
+              'repetitions': reps
+            })
+
+        history.append({
+            'date': w['date'],
+            'sport': w['sport'],
+            'load': w['load_level'],
+            'exercises': ex_list
+        })
+
+    conn.close()
+    return history

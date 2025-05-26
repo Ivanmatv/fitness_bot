@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.filters import Command, StateFilter
 
-from database import add_user, get_user, get_sport_id, add_workout, add_workout_exercise
+from database import add_user, get_user, get_sport_id, add_workout, add_workout_exercise, get_workout_history
 from workout_generator import generate_workout
 from datetime import datetime
 
@@ -21,7 +21,11 @@ class Form(StatesGroup):
 
 
 # Общая строка меню
-MENU_ROW = [KeyboardButton(text="/start"), KeyboardButton(text="/newworkout")]
+MENU_ROW = [
+    KeyboardButton(text="/start"),
+    KeyboardButton(text="/newworkout"),
+    KeyboardButton(text="/history")
+]
 
 # Клавиатура для выбора пола
 gender_kb = ReplyKeyboardMarkup(
@@ -139,9 +143,34 @@ async def process_load_level(message: types.Message, state: FSMContext):
     await state.clear()
 
 
+async def cmd_history(message: types.Message):
+    user = get_user(message.from_user.id)
+    if not user:
+        await message.answer("Сначала запустите бота: /start")
+        return
+
+    history = get_workout_history(user['id'])
+    if not history:
+        await message.answer("Пока нет ни одной завершённой тренировки.", reply_markup=with_menu(MENU_ROW))
+        return
+
+    # Формируем текст
+    for w in history:
+        text = (
+            f"📅 {w['date']}\n"
+            f"🏋️ Вид спорта: {w['sport']}\n"
+            f"💪 Нагрузка: {w['load']}\n\n"
+            "Упражнения:\n"
+        )
+        for i, ex in enumerate(w['exercises'], 1):
+            text += f"{i}. {ex['name']} — {ex['description']} ({ex['repetitions']} повт.)\n"
+        await message.answer(text, reply_markup=with_menu(gender_kb))
+
+
 def register_handlers(dp: Dispatcher):
     dp.message.register(cmd_start, Command(commands=["start"]))
     dp.message.register(cmd_newworkout, Command(commands=["newworkout"]))
+    dp.message.register(cmd_history, Command(commands=["history"]))
     dp.message.register(process_gender, StateFilter(Form.gender))
     dp.message.register(process_sport, StateFilter(Form.sport))
     dp.message.register(process_load_level, StateFilter(Form.load_level))
