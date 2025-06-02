@@ -84,9 +84,9 @@ def init_db():
     # Определяем группы упражнений для каждого вида спорта
     groups = {
         'фитнес': ['руки', 'плечи', 'грудь', 'спина', 'ноги', 'корпус'],
-        'пауэрлифтинг': ['жимовые упражнения', 'тяговые упражнения', 'ноги', 'подсобные упражнения'],
-        'тяжёлая атлетика': ['рывковые упражнения', 'тяговые упражнения', 'ноги', 'подсобные упражнения'],
-        'кроссфит': ['олимпийские движения', 'гимнастические упражнения', 'метаболические упражнения']
+        'пауэрлифтинг': ['жимовые упражнения', 'тяговые упражнения', 'ноги', 'подсобные упражнения', 'спина'],
+        'тяжёлая атлетика': ['рывковые упражнения', 'толчковые упражнения', 'ноги', 'подсобные упражнения'],
+        'кроссфит': ['разминка', 'рывковые упражнения', 'толчковые упражнения', 'жимовые упражнения', 'ноги', 'WOD', 'заминка', 'упражнения с гирями']
     }
     for sport_name, grp_list in groups.items():
         cursor.execute("SELECT id FROM sports WHERE name = ?", (sport_name,))
@@ -182,11 +182,27 @@ def get_exercises_for_sport_and_load(sport_id, load_level):
     return exercises
 
 
+def get_exercises_by_group(group_id, load_level):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT *
+        FROM exercises
+        WHERE group_id = ? AND load_level = ?
+        """,
+        (group_id, load_level)
+    )
+    res = cursor.fetchall()
+    conn.close()
+    return res
+
+
 def get_last_workout_exercises(user_id):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT e.id 
+        SELECT e.id
         FROM exercises e
         JOIN workout_exercises we ON e.id = we.exercise_id
         JOIN workouts w ON we.workout_id = w.id
