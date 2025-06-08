@@ -2,7 +2,7 @@ import random
 from database import (
     get_sport_id,
     get_group_id,
-    get_exercises_for_sport_and_load,
+    get_exercises_for_sport,
     get_last_workout_exercises,
     get_exercises_by_group
 )
@@ -38,7 +38,7 @@ def generate_workout(
         workout = []
         for group in groups:
             group_id = get_group_id(sport_id, group)
-            exercises = get_exercises_by_group(group_id, load_level)
+            exercises = get_exercises_by_group(group_id)
             pool = [ex for ex in exercises if ex["id"] not in last_ids]
             if not pool:
                 pool = exercises
@@ -71,7 +71,7 @@ def generate_workout(
         workout = []
         for group, cnt in scheme:
             group_id = get_group_id(sport_id, group)
-            exercises = get_exercises_by_group(group_id, load_level)
+            exercises = get_exercises_by_group(group_id)
             pool = [ex for ex in exercises if ex["id"] not in last_ids]
             if len(pool) < cnt:
                 pool = exercises
@@ -91,7 +91,7 @@ def generate_workout(
         }
         group, cnt = ta_types.get(workout_type, ("рывковые упражнения", 3))
         group_id = get_group_id(sport_id, group)
-        exercises = get_exercises_by_group(group_id, load_level)
+        exercises = get_exercises_by_group(group_id)
         pool = [ex for ex in exercises if ex["id"] not in last_ids]
         if len(pool) < cnt:
             pool = exercises
@@ -116,7 +116,7 @@ def generate_workout(
         # 1. Разминка
         group_id = get_group_id(sport_id, "разминка")
         if group_id:
-            warmup = get_exercises_by_group(group_id, load_level)
+            warmup = get_exercises_by_group(group_id)
             if warmup:
                 ex = dict(random.choice(warmup))
                 ex["repetitions"] = select_reps(ex, load_level)
@@ -132,7 +132,7 @@ def generate_workout(
         sg = random.choice(skill_groups)
         group_id = get_group_id(sport_id, sg)
         if group_id:
-            skills = get_exercises_by_group(group_id, load_level)
+            skills = get_exercises_by_group(group_id)
             if skills:
                 ex = dict(random.choice(skills))
                 ex["repetitions"] = select_reps(ex, load_level)
@@ -141,7 +141,7 @@ def generate_workout(
         # 3. WOD (тренировка дня)
         group_id = get_group_id(sport_id, "WOD")
         if group_id:
-            wod_exs = get_exercises_by_group(group_id, load_level)
+            wod_exs = get_exercises_by_group(group_id)
             if wod_exs:
                 ex = dict(random.choice(wod_exs))
                 ex["repetitions"] = select_reps(ex, load_level)
@@ -150,7 +150,7 @@ def generate_workout(
         # 4. Заминка
         group_id = get_group_id(sport_id, "заминка")
         if group_id:
-            finish = get_exercises_by_group(group_id, load_level)
+            finish = get_exercises_by_group(group_id)
             if finish:
                 ex = dict(random.choice(finish))
                 ex["repetitions"] = select_reps(ex, load_level)
@@ -159,7 +159,7 @@ def generate_workout(
         return workout
 
     # Фолбэк: случайно 4 упражнения
-    rows = get_exercises_for_sport_and_load(sport_id, load_level)
+    rows = get_exercises_for_sport(sport_id)
     pool = [r for r in rows if r["id"] not in last_ids]
     if len(pool) < 4:
         pool = rows

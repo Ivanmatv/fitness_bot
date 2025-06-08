@@ -46,7 +46,6 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
         group_id INTEGER,
-        load_level TEXT,
         description TEXT,
         reps_light TEXT,
         reps_medium TEXT,
@@ -165,33 +164,16 @@ def get_group_id(sport_id, group_name):
     return grp['id'] if grp else None
 
 
-def get_exercises_for_sport_and_load(sport_id, load_level):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        SELECT e.*
-        FROM exercises e
-        JOIN exercise_groups g ON e.group_id = g.id
-        WHERE g.sport_id = ? AND e.load_level = ?
-        """,
-        (sport_id, load_level)
-    )
-    exercises = cursor.fetchall()
-    conn.close()
-    return exercises
-
-
-def get_exercises_by_group(group_id, load_level):
+def get_exercises_by_group(group_id):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
         """
         SELECT *
         FROM exercises
-        WHERE group_id = ? AND load_level = ?
+        WHERE group_id = ?
         """,
-        (group_id, load_level)
+        (group_id,)
     )
     res = cursor.fetchall()
     conn.close()
@@ -260,3 +242,24 @@ def get_workout_history(user_id):
 
     conn.close()
     return history
+
+
+def get_exercises_for_sport(sport_id):
+    """
+    Запасной отбор: возвращает любые упражнения для заданного вида спорта
+    (из всех групп упражнения).
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT e.*
+        FROM exercises e
+        JOIN exercises_groups g ON e.group_id = g.id
+        WHERE g.sport_id = ?
+        """,
+        (sport_id,)
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
