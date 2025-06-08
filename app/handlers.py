@@ -132,7 +132,7 @@ async def process_sport(message: types.Message, state: FSMContext):
     elif message.text == "пауэрлифтинг":
         await message.answer("Выбери тип тренировки:", reply_markup=with_menu(pl_type_kb))
         await state.set_state(Form.workout_type)
-    elif message.text == "тяжелая атлетика":
+    elif message.text == "тяжёлая атлетика":
         await message.answer("Выбери тип тренировки:", reply_markup=with_menu(ta_type_kb))
         await state.set_state(Form.workout_type)
     elif message.text == "кроссфит":
@@ -141,6 +141,7 @@ async def process_sport(message: types.Message, state: FSMContext):
 
 
 async def process_fitness_type(message: types.Message, state: FSMContext):
+    logger.info(f"process_fitness_type: пользователь {message.from_user.id} ввёл {message.text}")
     t = message.text
     if t == "Всё тело":
         await state.update_data(workout_type="Всё тело")
@@ -155,6 +156,7 @@ async def process_fitness_type(message: types.Message, state: FSMContext):
 
 
 async def process_fitness_split_type(message: types.Message, state: FSMContext):
+    logger.info(f"process_fitness_type: пользователь {message.from_user.id} ввёл {message.text}")
     split = message.text
     splits = ["Грудь + руки", "Спина + руки", "Ноги + плечи"]
     if split not in splits:
@@ -166,6 +168,7 @@ async def process_fitness_split_type(message: types.Message, state: FSMContext):
 
 
 async def process_pl_type(message: types.Message, state: FSMContext):
+    logger.info(f"process_fitness_type: пользователь {message.from_user.id} ввёл {message.text}")
     pl_types = ["Жимовая + ноги", "Тяговая + спина", "Ноги + жимовая"]
     if message.text not in pl_types:
         await message.answer("Пожалуйста, выбери тип тренировки.")
@@ -176,6 +179,7 @@ async def process_pl_type(message: types.Message, state: FSMContext):
 
 
 async def process_ta_type(message: types.Message, state: FSMContext):
+    logger.info(f"process_fitness_type: пользователь {message.from_user.id} ввёл {message.text}")
     ta_types = ["Рывковая", "Толчковая"]
     if message.text not in ta_types:
         await message.answer("Пожалуйста, выбери тип тренировки.")
