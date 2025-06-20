@@ -8,6 +8,25 @@ from database import (
 )
 
 
+def is_similar_exercise(existing_exercises, new_exercise):
+        """
+        Проверяет, является ли новое упражнение слишком похожим на уже выбранные.
+        """
+        # Группы ключевых слов для похожих упражнений
+        similar_keywords = {
+            'Тяга становая': ['Тяга становая']
+        }
+
+        new_name = new_exercise['name']
+        for keyword_group in similar_keywords.values():
+            # Проверяем, содержит ли название нового упражнения ключевое слово из группы
+            if any(keyword in new_name for keyword in keyword_group):
+                for ex in existing_exercises:
+                    if any(keyword in ex['name'] for keyword in keyword_group):
+                        return True
+        return False
+
+
 def generate_workout(
     user_id, sport_id, load_level, workout_type=None, split_type=None
 ):
@@ -16,6 +35,7 @@ def generate_workout(
     """
     # Собираем id упражнений из прошлой тренировки (чтобы не дублировать)
     last_ids = set(get_last_workout_exercises(user_id))
+    workout = []
 
     # 1. ФИТНЕС
     if sport_id == get_sport_id("фитнес"):
@@ -35,7 +55,6 @@ def generate_workout(
         else:
             groups = ["ноги", "спина", "грудь", "руки"]  # fallback
 
-        workout = []
         for group in groups:
             group_id = get_group_id(sport_id, group)
             exercises = get_exercises_by_group(group_id)
@@ -43,7 +62,14 @@ def generate_workout(
             if not pool:
                 pool = exercises
             if pool:
-                ex = random.choice(pool)
+                # Фильтрация похожих упражнений
+                filtered_pool = [
+                    ex for ex in pool
+                    if not is_similar_exercise(workout, ex)
+                ]
+                if not filtered_pool:
+                    filtered_pool = pool
+                ex = random.choice(filtered_pool)
                 ex = dict(ex)
                 ex["repetitions"] = select_reps(ex, load_level)
                 workout.append(ex)
@@ -68,14 +94,20 @@ def generate_workout(
             ]
         }
         scheme = pl_schemes.get(workout_type, [("жимовые упражнения", 2), ("ноги", 2)])
-        workout = []
         for group, cnt in scheme:
             group_id = get_group_id(sport_id, group)
             exercises = get_exercises_by_group(group_id)
             pool = [ex for ex in exercises if ex["id"] not in last_ids]
             if len(pool) < cnt:
                 pool = exercises
-            picked = random.sample(pool, min(cnt, len(pool)))
+            # Фильтрация похожих упражнений
+            filtered_pool = [
+                ex for ex in pool
+                if not is_similar_exercise(workout, ex)
+            ]
+            if len(filtered_pool) < cnt:
+                filtered_pool = pool
+            picked = random.sample(filtered_pool, min(cnt, len(pool)))
             for ex in picked:
                 ex = dict(ex)
                 ex["repetitions"] = select_reps(ex, load_level)
@@ -95,8 +127,14 @@ def generate_workout(
         pool = [ex for ex in exercises if ex["id"] not in last_ids]
         if len(pool) < cnt:
             pool = exercises
-        picked = random.sample(pool, min(cnt, len(pool)))
-        workout = []
+        # Фильтрация похожих упражнений
+        filtered_pool = [
+            ex for ex in pool
+            if not is_similar_exercise(workout, ex)
+        ]
+        if len(filtered_pool) < cnt:
+            filtered_pool = pool
+        picked = random.sample(filtered_pool, min(cnt, len(filtered_pool)))
         for ex in picked:
             ex = dict(ex)
             ex["repetitions"] = select_reps(ex, load_level)
@@ -106,13 +144,6 @@ def generate_workout(
     # 4. КРОССФИТ
     if sport_id == get_sport_id("кроссфит"):
         # Кроссфит всегда состоит из блоков: разминка, Навыки/Сила, WOD, заминка
-        blocks = [
-            ("разминка", 1),
-            ("навыки/сила", 1),  # выбор одного типа
-            ("WOD", 1),
-            ("заминка", 1)
-        ]
-        workout = []
         # 1. Разминка
         group_id = get_group_id(sport_id, "разминка")
         if group_id:
@@ -163,7 +194,14 @@ def generate_workout(
     pool = [r for r in rows if r["id"] not in last_ids]
     if len(pool) < 4:
         pool = rows
-    picked = random.sample(pool, min(4, len(pool)))
+    # Фильтрация похожих упражнений
+    filtered_pool = [
+        ex for ex in pool
+        if not is_similar_exercise(workout, ex)
+    ]
+    if len(filtered_pool) < 4:
+        filtered_pool = pool
+    picked = random.sample(filtered_pool, min(4, len(filtered_pool)))
     workout = []
     for row in picked:
         ex = dict(row)
