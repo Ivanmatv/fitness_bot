@@ -1,49 +1,48 @@
-from aiogram import types
+from aiogram import Router, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from db.database import SessionLocal
-from db.models import User
+from aiogram.fsm.context import FSMContext
 
-INTENSITY_INFO = {
-    "light": "Лёгкий уровень нагрузки: 2–3 упражнения на группу мышц, короткие подходы и больше отдыха.",
-    "medium": "Средний уровень нагрузки: 4–5 упражнений, умеренные веса, отдых 60–90 секунд.",
-    "heavy": "Тяжёлый уровень нагрузки: 6–7 упражнений, большие веса, отдых 2–3 минуты."
-}
+from states import WorkoutStates
+from .workout_handler import generate_workout
 
-async def set_intensity(message: types.Message):
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    keyboard.add(
-        InlineKeyboardButton(text="Лёгкий", callback_data="intensity_light"),
-        InlineKeyboardButton(text="Средний", callback_data="intensity_medium"),
-        InlineKeyboardButton(text="Тяжёлый", callback_data="intensity_heavy"),
-        InlineKeyboardButton(text="Назад", callback_data="intensity_back")
+router = Router(name="intensity_handler")
+
+
+async def choose_intensity(message: types.Message, state: FSMContext):
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="Лёгкий", callback_data="intensity_light"),
+                InlineKeyboardButton(text="Средний", callback_data="intensity_medium"),
+                InlineKeyboardButton(text="Тяжёлый", callback_data="intensity_heavy")
+            ],
+            [
+                InlineKeyboardButton(text="Назад", callback_data="intensity_back")
+            ]
+        ]
     )
-    await message.answer("Выберите уровень нагрузки для тренировки:", reply_markup=keyboard)
+    await message.answer("Выберите уровень нагрузки:", reply_markup=keyboard)
 
-async def intensity_callback_handler(callback_query: types.CallbackQuery):
-    db = SessionLocal()
-    user_id = callback_query.from_user.id
-    user = db.query(User).filter(User.id == user_id).first()
-
-    data = callback_query.data.split("_")
-    if len(data) < 2:
-        # Обработка кнопки "Назад"
-        await callback_query.answer("Возвращаемся назад")
-        await callback_query.message.edit_text("Вы вернулись назад. Используйте /start для повторной настройки.")
-        db.close()
-        return
-
-    code = data[1]
-
-    if not user:
-        user = User(id=user_id, gender='M', sport='fitness', intensity='light')
-        db.add(user)
-        db.commit()
-
+@router.callback_query(WorkoutStates.waiting_for_intensity, lambda c: c.data.startswith("intensity_"))
+async def intensity_callback_handler(callback_query: types.CallbackQuery, state: FSMContext):
+    intensity_code = callback_query.data.split("_")[1]
     intensity_map = {"light": "light", "medium": "medium", "heavy": "heavy"}
-    user.intensity = intensity_map.get(code, "light")
-    db.commit()
+    intensity_name_map = {"light": "Лёгкий", "medium": "Средний", "heavy": "Тяжёлый"}
 
-    info = INTENSITY_INFO.get(code, "")
-    await callback_query.answer(f"Установлен уровень: {info}", show_alert=True)
-    await callback_query.message.edit_text(f"Уровень нагрузки: {info}")
-    db.close()
+    intensity = intensity_map.get(intensity_code)
+    intensity_name = intensity_name_map.get(intensity_code)
+
+    await state.update_data(intensity=intensity)
+    await callback_query.answer(f"Уровень: {intensity_name}")
+    await callback_query.message.edit_text(f"✅ Уровень нагрузки: {intensity_name}\n\nГенерирую тренировку...")
+
+    # Получаем данные и генерируем тренировку
+    data = await state.get_data()
+    print(f"DEBUG: data from state = {data}")
+    sport = data.get("sport")
+    intensity = data.get("intensity")
+    print(f"DEBUG: sport={sport}, intensity={intensity}")
+
+    await generate_workout(callback_query.message, sport=sport, intensity=intensity)
+    # Сбрасываем состояние
+    await state.clear()

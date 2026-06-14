@@ -1,21 +1,17 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 
-# Путь к базе данных для PostgreSQL
-DATABASE_URL = "postgresql://username:password@localhost:5432/fitness_bot_db"
+from config import DATABASE_URL
 
-# Создание движка базы данных
+
 engine = create_engine(DATABASE_URL)
 
-# Создание базового класса для моделей
 Base = declarative_base()
 
-# Создание сессии для взаимодействия с БД
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-# Функция для получения сессии
 def get_db():
     db = SessionLocal()
     try:
@@ -24,6 +20,6 @@ def get_db():
         db.close()
 
 
-# Функция для создания всех таблиц
 def create_tables():
+    """Создаёт все таблицы в базе данных"""
     Base.metadata.create_all(bind=engine)
