@@ -1,5 +1,8 @@
+# logger.py
 import logging
 from logging.handlers import RotatingFileHandler
+
+
 def get_logger():
     # Создаем логгер с именем 'my_app'
     logger = logging.getLogger('my_app')
