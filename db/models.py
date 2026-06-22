@@ -29,7 +29,7 @@ class Workout(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     user = relationship("User", back_populates="workouts")
     sport = relationship("Sport", back_populates="workouts")
-    intensity = relationship("IntensityLevel")
+    intensity = relationship("IntensityLevel", back_populates="workouts")
     workout_exercises = relationship(
         "WorkoutExercise",
         back_populates="workout",
@@ -77,3 +77,11 @@ class Exercise(Base):
     exercise_type_id = Column(Integer, ForeignKey('exercise_types.id'), nullable=False)
     sport = relationship("Sport", back_populates="exercises")
     exercise_type = relationship("ExerciseType", back_populates="exercises")
+
+
+class IntensityLevel(Base):
+    __tablename__ = "intensity_levels"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String, unique=True, nullable=False)
+    workouts = relationship("Workout", back_populates="intensity")

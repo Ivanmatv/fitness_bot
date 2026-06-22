@@ -35,10 +35,9 @@ SETS_COUNT = {
 }
 
 
-async def generate_workout(message: types.Message, sport=None, intensity=None):
+async def generate_workout(user_id: int, message: types.Message, sport=None, intensity=None):
     """Генерация тренировки с возможностью передачи sport и intensity (строковые названия)"""
     print(f"DEBUG: generate_workout called with sport={sport}, intensity={intensity}")
-    user_id = message.from_user.id
     db = SessionLocal()
 
     try:

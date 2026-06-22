@@ -43,7 +43,6 @@ async def gender_callback_handler(callback_query: types.CallbackQuery):
 
         data = callback_query.data.split("_")
         if len(data) < 2 or data[1] == "back":
-            # Обработка нажатия "Назад"
             await callback_query.answer("Возвращаемся назад")
             await callback_query.message.edit_text(
                 "Вы вернулись назад. "
@@ -79,7 +78,6 @@ async def gender_callback_handler(callback_query: types.CallbackQuery):
             "Попробуйте позже или начните заново через /start",
             show_alert=True
         )
-        # Дополнительно: убрать клавиатуру, предложить перезапустить
         await callback_query.message.edit_text(
             "Ошибка. Используйте /start для повторной настройки."
         )

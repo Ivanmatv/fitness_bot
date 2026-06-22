@@ -43,6 +43,10 @@ async def intensity_callback_handler(callback_query: types.CallbackQuery, state:
     intensity = data.get("intensity")
     print(f"DEBUG: sport={sport}, intensity={intensity}")
 
-    await generate_workout(callback_query.message, sport=sport, intensity=intensity)
-    # Сбрасываем состояние
+    await generate_workout(
+        user_id=callback_query.from_user.id,
+        message=callback_query.message,
+        sport=sport,
+        intensity=intensity
+    )
     await state.clear()
